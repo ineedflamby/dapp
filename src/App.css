@@ -1,0 +1,169 @@
+/* General body styling */
+body {
+  background-color: #ffd71d; /* Yellow background */
+  margin: 0;
+  padding: 0;
+}
+
+/* Root container for the app */
+.App {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+/* NFT Scroll Wrapper */
+.nft-scroll-wrapper {
+  position: relative;
+  width: 100%;
+  
+}
+
+/* NFT Scroll Container */
+.nft-scroll-container {
+  width: 100%;
+  height: 120px;
+  background-color: rgba(34, 34, 34, 0.9);;
+  overflow: hidden;
+  position: relative;
+  margin-top: 20px;
+}
+
+/* NFT Scroll Track */
+.nft-scroll-track {
+  display: flex;
+  width: 200%;
+  animation: scroll 100s linear infinite;
+}
+
+/* NFT Item */
+.nft-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
+}
+
+.nft-image {
+  width: 80px;
+  height: 80px;
+  background-color: #222;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  margin-bottom: 5px;
+}
+
+/* Updated Scroll Animation */
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Wallet Info / Connect Button Container */
+.wallet-container {
+  position: absolute;
+  top: 140px;
+  right: 20px;
+  min-width: 200px;
+  min-height: 34px;
+  z-index: 101;
+}
+
+/* Bottom News Ticker */
+.bottom-news-ticker {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  color: #000;
+  overflow: hidden;
+  padding: 30px 0;
+  z-index: 100;
+  transition: all 0.3s ease;
+}
+
+.ticker-track {
+  display: flex;
+  animation: ticker 30s linear infinite;
+  white-space: nowrap;
+}
+
+.ticker-item {
+  padding: 0 25px;
+  font-family: monospace;
+  font-weight: 500;
+  font-size: 24px;
+}
+
+.ticker-enlarged {
+  padding: 50px 0;
+  background: rgba(0, 0, 0, 0.95);
+}
+
+.ticker-enlarged .ticker-item {
+  font-size: 30px;
+}
+
+@keyframes ticker {
+  100% { transform: translateX(100%); }
+  0% { transform: translateX(-100%); }
+}
+
+/* Bottom News Band (GGC NEWS) */
+.news-band {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.8);
+  border-bottom: 0px solid #ff000f;
+  width: 100%;
+  position: fixed;
+  height: 40px;
+  left: 0;
+  bottom: 76px;
+  z-index: 101;
+}
+
+.news-logo {
+  display: flex;
+  background-color: #222;
+  margin-left: 100px;
+}
+
+.news-logo-letter {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  color: white;
+  margin: 0 1px;
+}
+
+.news-logo-letter:nth-child(1) {
+  background-color: #d10000;
+}
+
+.news-logo-letter:nth-child(2) {
+  background-color: #b30000;
+}
+
+.news-logo-letter:nth-child(3) {
+  background-color: #890000;
+}
+
+.news-logo-text {
+  background-color: #890000;
+  color: white;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  padding: 5px 10px;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
