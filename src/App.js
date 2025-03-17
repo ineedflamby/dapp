@@ -230,7 +230,7 @@ function App() {
   const [mintsByWallet, setMintsByWallet] = useState(0);
   const audioPlayerRef = useRef();
 
-  const contractAddress = "0xAD75351Abae85601B6A2dEFAB2E786db78F40820"; 
+  const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
  const contractABI =  [
     {
       "inputs": [],
@@ -978,7 +978,7 @@ function App() {
       "type": "function"
     }
   ];
-  const rpcUrl = "https://rpc.hyperliquid-testnet.xyz/evm";
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL;
 
   const createProvider = () => {
     if (!window.ethereum) return null;
