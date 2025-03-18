@@ -1,0 +1,38 @@
+# Logs
+logs/
+*.log
+*.log.*
+
+# Dependency directories
+node_modules/
+vendor/
+dist/
+
+# Build output
+build/
+out/
+*.o
+*.obj
+*.exe
+*.dll
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Miscellaneous
+*.bak
+*.tmp
+*.temp
