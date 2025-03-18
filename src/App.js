@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { BrowserProvider, Contract, formatUnits } from "ethers";
 import AudioPlayer from "./AudioPlayer";
 import "./App.css";
@@ -53,12 +53,12 @@ const BottomNewsTicker = () => {
   };
 
   const newsMessages = [
-    { text: "- 2222 AlmostHyperInscribedLiquidGoose -", color: "#ff4444" },
-    { text: "- 22 UNIQUE 1/1 -", color: "#00ff00" },
-    { text: "- AlmostHyperInscribedLiquidGoose -", color: "#00ccff" },
-    { text: "- Make your family proud, buy Bitcoin -", color: "#00ccff" },
-    { text: "- As I walk through the valley of the shadow of death I take a look at my life and realize there's nothin' left -", color: "#00ccff" },
-    { text: "- NSM UN LEZARD TRIANGULAIRE -", color: "#00ccff" },
+    { text: "- 2222 AlmostHyperInscribedLiquidGoose -", color: "#00ffd5" },
+    { text: "- 22 UNIQUE 1/1 -", color: "#00e0ff" },
+    { text: "- AlmostHyperInscribedLiquidGoose -", color: "#00bcff" },
+    { text: "- Make your family proud, buy Bitcoin -", color: "#0021ff" },
+    { text: "- As I walk through the valley of the shadow of death I take a look at my life and realize there's nothin' left -", color: "#8300ff" },
+    { text: "- NSM UN LEZARD TRIANGULAIRE -", color: "#cc00ff" },
   ];
 
   return (
@@ -185,7 +185,7 @@ const MintLimitModal = ({ isOpen, onClose }) => {
           padding: "20px",
           borderRadius: "10px",
           border: "2px solid #00FF00",
-          textAlign: "center",
+          textAlign: "right",
           color: "#FFFFFF",
           fontFamily: "monospace",
           maxWidth: "400px",
@@ -228,10 +228,12 @@ function App() {
   const [price, setPrice] = useState("0.22");
   const [mintQuantity, setMintQuantity] = useState(0);
   const [mintsByWallet, setMintsByWallet] = useState(0);
-  const audioPlayerRef = useRef();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [shouldPlay, setShouldPlay] = useState(false);
+  const audioPlayerRef = useRef(null);
 
   const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
- const contractABI =  [
+  const contractABI = useMemo(() =>  [
     {
       "inputs": [],
       "stateMutability": "nonpayable",
@@ -976,168 +978,184 @@ function App() {
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    }
-  ];
+    }, 
+
+  ], []);
+
   const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL;
 
-  const createProvider = () => {
-    if (!window.ethereum) return null;
+const createProvider = () => {
+  if (!window.ethereum) return null;
 
-    const provider = new BrowserProvider(window.ethereum, {
-      chainId: 998,
-      name: "Hyperliquid Testnet",
-      ensAddress: null,
-    });
+  const provider = new BrowserProvider(window.ethereum, {
+    chainId: 998,
+    name: "Hyperliquid Testnet",
+    ensAddress: null,
+  });
 
-    return provider;
-  };
+  return provider;
+};
 
-  const connectWallet = async () => {
-    try {
-      if (!window.ethereum) {
-        alert("Please install a compatible wallet (e.g., MetaMask or Hyperliquid wallet)");
-        return;
-      }
+const connectWallet = async () => {
+  try {
+    if (!window.ethereum) {
+      alert("Please install a compatible wallet (e.g., MetaMask or Hyperliquid wallet)");
+      return;
+    }
 
-      const provider = createProvider();
-      if (!provider) throw new Error("Provider not initialized");
+    const provider = createProvider();
+    if (!provider) throw new Error("Provider not initialized");
 
-      await provider.send("eth_requestAccounts", []);
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      setAccount(address);
+    await provider.send("eth_requestAccounts", []);
+    const signer = await provider.getSigner();
+    const address = await signer.getAddress();
+    setAccount(address);
 
-      await window.ethereum.request({
-        method: "wallet_addEthereumChain",
-        params: [
-          {
-            chainId: "0x3E6",
-            chainName: "Hyperliquid",
-            rpcUrls: [rpcUrl],
-            nativeCurrency: {
-              name: "Hyperliquid Token",
-              symbol: "HYPE",
-              decimals: 18,
-            },
-            blockExplorerUrls: ["HYPERLIQUID_EXPLORER_URL"],
+    setShouldPlay(true);
+
+    if (audioPlayerRef.current) {
+      console.log("Attempting to play audio...");
+      setTimeout(() => {
+        audioPlayerRef.current.playAudio(); // Use the exposed method name
+      }, 100);
+    }
+
+    if (!rpcUrl || !rpcUrl.startsWith("https://")) {
+      throw new Error("Invalid RPC URL. Please check your environment configuration.");
+    }
+
+    await window.ethereum.request({
+      method: "wallet_addEthereumChain",
+      params: [
+        {
+          chainId: "0x3E6",
+          chainName: "Hyperliquid",
+          rpcUrls: [rpcUrl],
+          nativeCurrency: {
+            name: "Hyperliquid Token",
+            symbol: "HYPE",
+            decimals: 18,
           },
-        ],
-      });
-    } catch (error) {
-      console.error("Wallet connection failed:", error);
-      alert("Failed to connect wallet: " + error.message);
+          blockExplorerUrls: ["HYPERLIQUID_EXPLORER_URL"],
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("Wallet connection failed:", error);
+    alert("Failed to connect wallet: " + error.message);
+  }
+};
+
+const mint = async () => {
+  try {
+    if (!account) {
+      alert("Please connect your wallet first");
+      return;
     }
-  };
 
-  const mint = async () => {
-    try {
-      if (!account) {
-        alert("Please connect your wallet first");
-        return;
-      }
+    const provider = createProvider();
+    if (!provider) throw new Error("Provider not initialized");
 
-      const provider = createProvider();
-      if (!provider) throw new Error("Provider not initialized");
+    const contract = new Contract(contractAddress, contractABI, provider);
+    const mintLimitPerWallet = await contract.MINT_LIMIT_PER_WALLET();
 
-      const contract = new Contract(contractAddress, contractABI, provider);
-      const mintLimitPerWallet = await contract.MINT_LIMIT_PER_WALLET();
-
-      if (mintsByWallet + mintQuantity > Number(mintLimitPerWallet)) {
-        alert("Goosy greedy goose, you allready minted your quotas");
-        return;
-      }
-
-      const signer = await provider.getSigner();
-      const contractWithSigner = new Contract(contractAddress, contractABI, signer);
-
-      const currentSupply = await contract.totalSupply();
-      const freeMintLimit = 222;
-      const mintPriceWei = await contract.mintPrice();
-
-      let cost;
-      if (Number(currentSupply) + mintQuantity <= freeMintLimit) {
-        cost = window.BigInt(0);
-      } else if (Number(currentSupply) < freeMintLimit) {
-        const freeCount = freeMintLimit - Number(currentSupply);
-        const paidCount = mintQuantity - freeCount;
-        cost = mintPriceWei * window.BigInt(paidCount);
-      } else {
-        cost = mintPriceWei * window.BigInt(mintQuantity);
-      }
-
-      const tx = await contractWithSigner.mint(mintQuantity, { value: cost });
-      setTxHash(tx.hash);
-      await tx.wait();
-      alert(`Minted ${mintQuantity} NFT(s)! Transaction: ${tx.hash}`);
-
-      fetchTotalSupply();
-      fetchMintsByWallet();
-    } catch (error) {
-      console.error("Minting failed:", error);
-      if (error.message.includes("Exceeds wallet mint limit")) {
-        alert("You've reached the mint limit of 3 NFTs per wallet!");
-      } else {
-        alert("Minting failed: " + error.message);
-      }
+    if (mintsByWallet + mintQuantity > Number(mintLimitPerWallet)) {
+      alert("Goosy greedy goose, you allready minted your quotas");
+      return;
     }
-  };
 
-  const fetchTotalSupply = async () => {
-    try {
-      const provider = createProvider();
-      if (!provider) return;
+    const signer = await provider.getSigner();
+    const contractWithSigner = new Contract(contractAddress, contractABI, signer);
 
-      const contract = new Contract(contractAddress, contractABI, provider);
-      const supply = await contract.totalSupply();
-      setTotalSupply(Number(supply));
-    } catch (error) {
-      console.error("Error fetching supply:", error);
-    }
-  };
+    const currentSupply = await contract.totalSupply();
+    const freeMintLimit = 222;
+    const mintPriceWei = await contract.mintPrice();
 
-  const fetchMintPrice = async () => {
-    try {
-      const provider = createProvider();
-      if (!provider) return;
-
-      const contract = new Contract(contractAddress, contractABI, provider);
-      const priceWei = await contract.mintPrice();
-      const priceHype = formatUnits(priceWei, 18);
-
-      const currentSupply = await contract.totalSupply();
-      const freeMintLimit = 222;
-
-      if (Number(currentSupply) < freeMintLimit) {
-        setPrice("FREE MINT");
-      } else {
-        setPrice(priceHype);
-      }
-    } catch (error) {
-      console.error("Error fetching mint price:", error);
-      setPrice("FREE MINT");
-    }
-  };
-
-  const fetchMintsByWallet = async () => {
-    try {
-      const provider = createProvider();
-      if (!provider || !account) return;
-
-      const contract = new Contract(contractAddress, contractABI, provider);
-      const mints = await contract.mintsPerWallet(account);
-      setMintsByWallet(Number(mints));
-    } catch (error) {
-      console.error("Error fetching wallet mints:", error);
-    }
-  };
-
-  const calculateTotalPrice = () => {
-    if (totalSupply < 222) {
-      return "FREE MINT";
+    let cost;
+    if (Number(currentSupply) + mintQuantity <= freeMintLimit) {
+      cost = window.BigInt(0);
+    } else if (Number(currentSupply) < freeMintLimit) {
+      const freeCount = freeMintLimit - Number(currentSupply);
+      const paidCount = mintQuantity - freeCount;
+      cost = mintPriceWei * window.BigInt(paidCount);
     } else {
-      return (parseFloat(price) * mintQuantity).toFixed(2) + " HYPE";
+      cost = mintPriceWei * window.BigInt(mintQuantity);
     }
-  };
+
+    const tx = await contractWithSigner.mint(mintQuantity, { value: cost });
+    setTxHash(tx.hash);
+    await tx.wait();
+    alert(`Minted ${mintQuantity} NFT(s)! Transaction: ${tx.hash}`);
+
+    fetchTotalSupply();
+    fetchMintsByWallet();
+  } catch (error) {
+    console.error("Minting failed:", error);
+    if (error.message.includes("Exceeds wallet mint limit")) {
+      alert("You've reached the mint limit of 3 NFTs per wallet!");
+    } else {
+      alert("Minting failed: " + error.message);
+    }
+  }
+};
+
+// Memoized functions with useCallback
+const fetchTotalSupply = useCallback(async () => {
+  try {
+    const provider = createProvider();
+    if (!provider) return;
+
+    const contract = new Contract(contractAddress, contractABI, provider);
+    const supply = await contract.totalSupply();
+    setTotalSupply(Number(supply));
+  } catch (error) {
+    console.error("Error fetching supply:", error);
+  }
+}, [contractAddress, contractABI]); // Dependencies
+
+const fetchMintPrice = useCallback(async () => {
+  try {
+    const provider = createProvider();
+    if (!provider) return;
+
+    const contract = new Contract(contractAddress, contractABI, provider);
+    const priceWei = await contract.mintPrice();
+    const priceHype = formatUnits(priceWei, 18);
+
+    const currentSupply = await contract.totalSupply();
+    const freeMintLimit = 222;
+
+    if (Number(currentSupply) < freeMintLimit) {
+      setPrice("FREE MINT");
+    } else {
+      setPrice(priceHype);
+    }
+  } catch (error) {
+    console.error("Error fetching mint price:", error);
+    setPrice("FREE MINT");
+  }
+}, [contractAddress, contractABI]); // Dependencies
+
+const fetchMintsByWallet = useCallback(async () => {
+  try {
+    const provider = createProvider();
+    if (!provider || !account) return;
+
+    const contract = new Contract(contractAddress, contractABI, provider);
+    const mints = await contract.mintsPerWallet(account);
+    setMintsByWallet(Number(mints));
+  } catch (error) {
+    console.error("Error fetching wallet mints:", error);
+  }
+}, [account, contractAddress, contractABI]); // Dependencies
+
+const calculateTotalPrice = () => {
+  if (totalSupply < 222) {
+    return "FREE MINT";
+  } else {
+    return (parseFloat(price) * mintQuantity).toFixed(2) + " HYPE";
+  }
+};
 
   const totalPrice = calculateTotalPrice();
 
@@ -1152,22 +1170,22 @@ function App() {
           const balanceHype = formatUnits(balanceWei, 18);
           setBalance(parseFloat(balanceHype).toFixed(2));
 
-          fetchTotalSupply();
-          fetchMintPrice();
-          fetchMintsByWallet();
+          await fetchTotalSupply();
+          await fetchMintPrice();
+          await fetchMintsByWallet();
         } catch (error) {
           console.error("Error fetching data:", error);
         }
       } else {
-        fetchTotalSupply();
-        fetchMintPrice();
+        await fetchTotalSupply();
+        await fetchMintPrice();
       }
     };
 
     fetchData();
     const intervalId = setInterval(fetchData, 30000);
     return () => clearInterval(intervalId);
-  }, [account]);
+  }, [account, fetchTotalSupply, fetchMintPrice, fetchMintsByWallet]);
 
   const incrementQuantity = () => {
     if (mintQuantity < 3) {
@@ -1182,26 +1200,76 @@ function App() {
   };
 
   return (
-    <div className="App" style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
-      {/* Video Background */}
-      <video
-        autoPlay
-        loop
-        muted
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          zIndex: -1,
-        }}
-      >
-        <source src={`${process.env.PUBLIC_URL}/moneyprinter.mp4`} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+    <div className="App" style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
+      {/* Video Background Container */}
+      <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}>
+        {/* Blurred Background Video (full screen) */}
+        <video
+          autoPlay
+          loop
+          muted
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            filter: "blur(10px)",
+            zIndex: -2,
+          }}
+        >
+          <source src={`${process.env.PUBLIC_URL}/moneyprinter.mp4`} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
 
+        {/* Central Video (80% width) */}
+        <div
+          style={{
+            position: "absolute",
+            top: "13.5%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "100%",
+            height: "73.5%",
+            overflow: "hidden",
+            display: "flex",
+            filter:"blur(3px)",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: -1,
+          }}
+        >
+          <video
+            autoPlay
+            loop
+            muted
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          >
+            <source src={`${process.env.PUBLIC_URL}/moneyprinter.mp4`} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        {/* Overlay to hide blurred video in the center */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: "10%",
+            width: "80%",
+            height: "80%",
+            background: "transparent",
+            zIndex: 0,
+          }}
+        />
+      </div>
+
+      {/* NFT Scroll Band */}
       <div className="nft-scroll-wrapper">
         <NFTScrollBand />
       </div>
@@ -1209,80 +1277,80 @@ function App() {
       <NFTPreview quantity={mintQuantity} />
 
       {account ? (
-        <div
-          style={{
-            position: "absolute",
-            top: "140px",
-            right: "0px",
-            background: "#222",
-            padding: "8px 12px",
-            borderRadius: "0px",
-            borderBottomLeftRadius: "10px",
-            border: "1px solid #f000",
-            color: "#FFFFFF",
-            fontSize: "18px",
-            fontFamily: "monospace",
-            zIndex: 101,
-          }}
-        >
+        <div className="wallet-container">
           {balance} HYPE | {`${account.slice(0, 6)}...${account.slice(-4)}`}
         </div>
       ) : (
-        <div
-          style={{
-            position: "absolute",
-            top: "140px",
-            right: "0px",
-            height: "34px",
-            width: "200px",
-          }}
-        >
+        <div className="wallet-container">
           <button
             onClick={connectWallet}
             style={{
-              background: "#FFFFFF",
-              color: "#000",
+            
+              color: 'black',
               padding: "10px 20px",
               border: "none",
               borderRadius: "5px",
               cursor: "pointer",
               fontSize: "18px",
               fontWeight: "bold",
+              width: "100%",
             }}
           >
             Connect Wallet
           </button>
         </div>
       )}
+
       <div
         style={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          marginTop: "80px",
+          marginTop: "20px", // Reduced from 80px to bring it closer to the top
           gap: "10px",
+          position: "absolute",
+          top: "150px", // Position it below the NFT scroll band
+          width: "100%",
         }}
       >
-        <h1
-          style={{
-            color: "#F00000",
-            fontSize: "36px",
-            marginTop: "-80px",
-          }}
+         <h1
+            style={{
+              color: "#FFFFFF",
+              WebkitTextStroke: "2px #000000", // Red stroke
+              MozTextStroke: "2px #000000", // Mozilla prefix
+              textStroke: "2px #000000", // Standard (less supported)
+              fontSize: "55px",
+              marginTop: -60, // Adjusted negative margin
+              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)", // Optional shadow for depth
+
+              padding: "10px 20px",
+              borderRadius: "5px",
+            }}
         >
           ALMOST HYPER INSCRIBED LIQUID GOOSE
         </h1>
       </div>
 
       {account && (
-        <div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            position: "absolute",
+            top: "73%", // Center vertically
+            left: "50%",
+            transform: "translate(-50%, -50%)", // Center both horizontally and vertically
+            width: "100%",
+            zIndex: 102,
+          }}
+        >
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              marginBottom: "0px",
-              marginTop: "350px",
+              marginBottom: "60px", // Reduced margin
             }}
           >
             <button
@@ -1337,7 +1405,7 @@ function App() {
           </p>
 
           {txHash && (
-            <p style={{ color: "#000000", marginTop: "-135px", textAlign: "center" }}>
+            <p style={{ color: "#000000", marginTop: "10px", textAlign: "center" }}>
               Transaction:{" "}
               <a
                 href={`https://testnet.purrsec.com/tx/${txHash}`}
@@ -1390,12 +1458,12 @@ function App() {
             minHeight: "10px",
           }}
         >
-          <span>{totalSupply}/2222 minted</span>
+          <span>{totalSupply}/{maxSupply} minted</span>
           <span>
             {totalSupply < 222 ? (
-              <span style={{ color: "#00ff00" }}>222 Free mint</span>
+              <span style={{ color: "#ec7700" }}>222 Free mint</span>
             ) : (
-              <span style={{ color: "#ff4444" }}>0 Free mint</span>
+              <span style={{ color: "#ec7700" }}>0 Free mint</span>
             )}
           </span>
         </div>
@@ -1408,13 +1476,13 @@ function App() {
             width: "100%",
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: "right",
             minHeight: "10px",
           }}
         >
           <span>Price: {price}</span>
           <span>
-            {price === "FREE MINT" ? "" : <span style={{ color: "#ffcc00" }}>0.22 HYPE Per mint</span>}
+            {price === "FREE MINT" ? "" : <span style={{ color: "#ec7700" }}>0.22 HYPE Per mint</span>}
           </span>
         </div>
         <div
@@ -1450,13 +1518,22 @@ function App() {
       </div>
       <BottomNewsBand />
       <BottomNewsTicker />
-      <AudioPlayer audioSrc={`${process.env.PUBLIC_URL}/1.mp3`} trackName="JuL - Alors la zone (Version Skyrock)" />
+      <MintLimitModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <AudioPlayer
+        audioSrc={`${process.env.PUBLIC_URL}/1.mp3`}
+        trackName="JuL - Alors la zone (Version Skyrock)"
+        ref={audioPlayerRef}
+        shouldPlay={shouldPlay}
+        startTime={25}
+        style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          zIndex: 103,
+        }}
+      />
     </div>
   );
 }
 
 export default App;
-
-
-
-  

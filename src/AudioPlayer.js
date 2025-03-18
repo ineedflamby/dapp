@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 
-const AudioPlayer = forwardRef(({ audioSrc, trackName }, ref) => {
+const AudioPlayer = forwardRef(({ audioSrc, trackName, startTime = 0 }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -13,6 +13,11 @@ const AudioPlayer = forwardRef(({ audioSrc, trackName }, ref) => {
   useImperativeHandle(ref, () => ({
     playAudio() {
       if (!error && !isPlaying) {
+        // Set the current time to startTime before playing
+        if (audioRef.current) {
+          audioRef.current.currentTime = startTime;
+        }
+        
         const playPromise = audioRef.current.play();
         if (playPromise !== undefined) {
           playPromise
