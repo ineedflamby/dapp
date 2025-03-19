@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { BrowserProvider, Contract, formatUnits } from "ethers";
 import AudioPlayer from "./AudioPlayer";
-import "./App.css";
+import "./App.css"
+
 
 // Component for the scrolling NFT band (unchanged)
 const NFTScrollBand = () => {
@@ -232,8 +233,9 @@ function App() {
   const [shouldPlay, setShouldPlay] = useState(false);
   const audioPlayerRef = useRef(null);
 
-  const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
-  const contractABI = useMemo(() =>  [
+  const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || "0xb76ce86dea65f2aecaded0a4df6ee28d97d749bb";
+  const contractABI = useMemo(() =>  
+     [
     {
       "inputs": [],
       "stateMutability": "nonpayable",
@@ -362,6 +364,11 @@ function App() {
         }
       ],
       "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ReentrancyGuardReentrantCall",
       "type": "error"
     },
     {
@@ -742,19 +749,6 @@ function App() {
       "inputs": [
         {
           "internalType": "address",
-          "name": "wallet",
-          "type": "address"
-        }
-      ],
-      "name": "resetMintCount",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
           "name": "from",
           "type": "address"
         },
@@ -803,19 +797,6 @@ function App() {
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "saleIsActive",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "address",
@@ -836,12 +817,12 @@ function App() {
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "price",
-          "type": "uint256"
+          "internalType": "string",
+          "name": "newBaseURI",
+          "type": "string"
         }
       ],
-      "name": "setMintPrice",
+      "name": "setBaseURI",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -849,12 +830,12 @@ function App() {
     {
       "inputs": [
         {
-          "internalType": "bool",
-          "name": "status",
-          "type": "bool"
+          "internalType": "string",
+          "name": "newUniqueBaseURI",
+          "type": "string"
         }
       ],
-      "name": "setSaleActive",
+      "name": "setUniqueBaseURI",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -978,11 +959,11 @@ function App() {
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
-    }, 
+    } 
 
   ], []);
 
-  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL;
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.hyperliquid-testnet.xyz/evm";
 
 const createProvider = () => {
   if (!window.ethereum) return null;
@@ -1394,31 +1375,44 @@ const calculateTotalPrice = () => {
                 borderRadius: "0 5px 5px 0",
                 cursor: "pointer",
                 fontSize: "18px",
-                fontWeight: "bold",
-              }}
-            >
-              +
-            </button>
-          </div>
-          <p style={{ color: "#000000", marginTop: "10px", textAlign: "center" }}>
-            Total: {totalPrice}
-          </p>
-
-          {txHash && (
-            <p style={{ color: "#000000", marginTop: "10px", textAlign: "center" }}>
-              Transaction:{" "}
-              <a
-                href={`https://testnet.purrsec.com/tx/${txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#0000EE" }}
+                  fontWeight: "bold",
+                }}
               >
-                {txHash}
-              </a>
+                +
+              </button>
+            </div>
+            <p style={{ color: "#000000", marginTop: "10px", textAlign: "center" }}>
+              Total: {totalPrice}
             </p>
-          )}
-        </div>
-      )}
+
+            {txHash && (
+              <p 
+                style={{ 
+                  position: "fixed",
+                  bottom: "200px", // Above the supply box (which is at 120px)
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  color: "#FFFFFF",
+                  textAlign: "center",
+                  zIndex: 103,
+                  background: "rgba(0, 0, 0, 0.5)",
+                  padding: "5px 10px",
+                  borderRadius: "5px",
+                }}
+              >
+                Transaction:{" "}
+                <a
+                  href={`https://testnet.purrsec.com/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#0000EE" }}
+                >
+                  {txHash}
+                </a>
+              </p>
+            )}
+          </div>
+        )}
 
       <div
         style={{
