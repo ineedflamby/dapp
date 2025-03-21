@@ -993,14 +993,14 @@ function App() {
 
   ], []);
 
-  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.hyperliquid-testnet.xyz/evm";
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.hyperliquid.xyz/evm";
 
   const createProvider = () => {
     if (!window.ethereum) return null;
 
     const provider = new BrowserProvider(window.ethereum, {
-      chainId: 998,
-      name: "Hyperliquid Testnet",
+      chainId: 999,
+      name: "Hyperliquid Mainnet",
       ensAddress: null,
     });
 
@@ -1039,7 +1039,7 @@ function App() {
         method: "wallet_addEthereumChain",
         params: [
           {
-            chainId: "0x3E6",
+            chainId: "0x3E7",
             chainName: "Hyperliquid",
             rpcUrls: [rpcUrl],
             nativeCurrency: {
@@ -1524,7 +1524,7 @@ function App() {
             >
               Transaction:{" "}
               <a
-                href={`https://testnet.purrsec.com/tx/${txHash}`}
+                href={`https://purrsec.com/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: "#0000EE" }}
@@ -1615,7 +1615,7 @@ function App() {
           }}
         >
           <a
-            href={`https://testnet.purrsec.com/address/${contractAddress}`}
+            href={`https://purrsec.com/address/${contractAddress}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
