@@ -4,6 +4,21 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// Add these lines to set the document title
+document.title = "AlmostHyperInscribedLiquidGoose";
+
+// Set favicon link
+const link = document.createElement('link');
+link.rel = 'icon';
+link.href = `${process.env.PUBLIC_URL}/favicon.png`;
+document.head.appendChild(link);
+
+// Add meta description for SEO
+const metaDescription = document.createElement('meta');
+metaDescription.name = 'description';
+metaDescription.content = 'AlmostHyperInscribedLiquidGoose';
+document.head.appendChild(metaDescription);
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

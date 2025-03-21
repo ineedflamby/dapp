@@ -124,17 +124,7 @@ body {
   color: #00ffcc;
 }
 
-
 /* Wallet Info / Connect Button Container */
-.wallet-container {
-  position: absolute;
-  top: 140px;
-  right: 20px;
-  min-width: 200px;
-  min-height: 34px;
-  z-index: 101;
-}
-
 .wallet-container {
   position: absolute;
   top: 120px;
@@ -261,4 +251,34 @@ video {
   padding: 5px 10px;
   font-size: 16px;
   letter-spacing: 1px;
+}
+
+/* New styling for the owner toggle button */
+.owner-toggle-btn {
+  position: fixed;
+  top: 50%; /* Vertically centered */
+  right: 20px; /* Positioned on the right */
+  width: 50px; /* Square size */
+  height: 50px; /* Square size */
+  background: #44FF44; /* Green when minting is disabled */
+  color: #000;
+  border: 2px solid #fff; /* Consistent with wallet-container border */
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: monospace; /* Matches your app’s font style */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 103; /* Matches wallet-container and audio-player */
+  transition: background 0.3s ease; /* Smooth color transition */
+}
+
+.owner-toggle-btn.enabled {
+  background: #FF4444; /* Red when minting is enabled */
+}
+
+.owner-toggle-btn:hover {
+  opacity: 0.9; /* Slight hover effect */
 }
